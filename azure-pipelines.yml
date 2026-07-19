@@ -10,31 +10,36 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- task: Maven@4
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.11'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
-    
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: '$(System.DefaultWorkingDirectory)'
-    Contents: '**/*.war'
-    TargetFolder: '$(Build.artifactstagingdirectory)'
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'dropwarfile'
-    publishLocation: 'Container'
+stages:
+- stage: Build
+  jobs:
+  - job: MavenBuild
+    steps:
+    - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        mavenOptions: '-Xmx3072m'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.11'
+        jdkArchitectureOption: 'x64'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        goals: 'package'
 
-    
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)'
+        Contents: '**/*.war'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'dropwarfile'
+        publishLocation: 'Container'
+
 - stage: Deploy
+  dependsOn: Build
   jobs:
   - job: DeployToTomcat
     steps:
@@ -44,9 +49,9 @@ steps:
         downloadType: 'single'
         artifactName: 'dropwarfile'
         downloadPath: '$(System.ArtifactsDirectory)'
+
     - task: CopyFiles@2
       inputs:
         SourceFolder: '$(System.ArtifactsDirectory)/dropwarfile'
         Contents: '**/*.war'
         TargetFolder: '/path/to/tomcat/webapps'
-        
