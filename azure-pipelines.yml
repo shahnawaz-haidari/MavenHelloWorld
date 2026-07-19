@@ -32,3 +32,20 @@ steps:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'dropwarfile'
     publishLocation: 'Container'
+- stage: Deploy
+  dependsOn: Build
+  jobs:
+  - job: DeployToTomcat
+    steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'dropwarfile'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(System.ArtifactsDirectory)/dropwarfile'
+        Contents: '**/*.war'
+        TargetFolder: '/path/to/tomcat/webapps'
+        
