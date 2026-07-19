@@ -32,8 +32,9 @@ steps:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'dropwarfile'
     publishLocation: 'Container'
+
+    
 - stage: Deploy
-  dependsOn: Build
   jobs:
   - job: DeployToTomcat
     steps:
